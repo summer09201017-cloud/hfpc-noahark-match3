@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>挪亞方舟・動物上船</title>
+<meta name="description" content="點兩隻相鄰的動物交換,排成一排 3 隻同款就一起上船!一對一對進方舟,保全生命(創世記 6-9,和合本)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#9db8d8">
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#9db8d8;overflow:hidden;touch-action:none;
+    font-family:"Microsoft JhengHei","PingFang TC",system-ui,sans-serif;-webkit-user-select:none;user-select:none}
+  canvas{display:block;touch-action:none}
+  #rotate{display:none;position:fixed;inset:0;background:#2c3c50;color:#f4f8e8;z-index:9;
+    align-items:center;justify-content:center;text-align:center;font-size:22px;line-height:1.8;padding:24px}
+  @media (orientation:portrait) and (max-width:700px){ #rotate{display:flex} }
+</style>
+</head>
+<body>
+<div id="rotate">📱 請把手機轉成橫向<br>方舟和動物們都在等你!</div>
+<canvas id="cv"></canvas>
+<script src="game.js"></script>
+<script>
+// play-stats 三層匿名計數(lobby-play-rank):開啟 10 分去重;-start/-done 不去重;-done 帶 t=秒。零個資。
+(function(){
+  var host = location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1' || location.protocol === 'file:') return;
+  window.__ping = function(key, t){
+    try{
+      var u = 'https://hfpc-play-stats.summer09201017.workers.dev/api/ping?g=' + key + (t ? '&t=' + t : '');
+      if (navigator.sendBeacon) navigator.sendBeacon(u); else fetch(u, { mode: 'no-cors' });
+    }catch(e){}
+  };
+  try{
+    var k = 'ping-noahark-match3', now = Date.now(), last = 0;
+    try{ last = +localStorage.getItem(k) || 0; }catch(e){}
+    if (now - last > 10*60*1000){ window.__ping('noahark-match3'); try{ localStorage.setItem(k, ''+now); }catch(e){} }
+  }catch(e){}
+})();
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+}
+</script>
+</body>
+</html>

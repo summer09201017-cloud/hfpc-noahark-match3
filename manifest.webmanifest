@@ -1,0 +1,13 @@
+{
+  "name": "挪亞方舟・動物上船",
+  "short_name": "方舟上船",
+  "description": "點兩隻相鄰的動物交換,排成一排 3 隻同款就一起上船!一對一對進方舟,保全生命(創世記 6-9,和合本)",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#9db8d8",
+  "theme_color": "#8a5a30",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
