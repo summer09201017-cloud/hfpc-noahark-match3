@@ -641,6 +641,7 @@
       ctx.setTransform(s, 0, 0, s, ox, oy)
       this._bgRainbow()
       this._clouds()
+      this._waterside()
       if (this.state === 'intro') { this._drawIntro(); this._fsBtn(); ctx.restore(); return }
       if (this.state === 'map') { this._drawMap(); this._fsBtn(); ctx.restore(); return }
       const g = this._geo()
@@ -783,6 +784,36 @@
       ctx.restore()
     }
 
+
+
+    // 💧 方舟停在水邊(洪水漸退;底部水面+波光+蘆葦,07-24 使用者點名)
+    _waterside() {
+      const { ctx } = this
+      ctx.save()
+      const wg = ctx.createLinearGradient(0, 500, 0, VH)
+      wg.addColorStop(0, 'rgba(150,200,230,0.55)')
+      wg.addColorStop(1, 'rgba(110,170,215,0.75)')
+      ctx.fillStyle = wg
+      ctx.beginPath()
+      ctx.moveTo(0, 516)
+      for (let x = 0; x <= VW; x += 40) ctx.lineTo(x, 512 + Math.sin(x / 90 + this._t * 0.8) * 4)
+      ctx.lineTo(VW, VH); ctx.lineTo(0, VH); ctx.closePath(); ctx.fill()
+      ctx.strokeStyle = 'rgba(255,255,255,0.5)'; ctx.lineWidth = 2; ctx.lineCap = 'round'
+      for (const [bx, by, len] of [[80, 526, 40], [300, 530, 56], [560, 524, 44], [800, 530, 60]]) {
+        const dx2 = Math.sin(this._t * 1.2 + bx) * 6
+        ctx.beginPath(); ctx.moveTo(bx + dx2, by); ctx.lineTo(bx + dx2 + len, by); ctx.stroke()
+      }
+      ctx.lineCap = 'butt'
+      ctx.strokeStyle = '#5a8a4a'; ctx.lineWidth = 3
+      for (const [rx, lean] of [[26, -1], [40, 1], [922, -1], [936, 1]]) {
+        const sway = Math.sin(this._t * 1.5 + rx) * 3
+        ctx.beginPath(); ctx.moveTo(rx, 540); ctx.quadraticCurveTo(rx + lean * 6 + sway, 505, rx + lean * 2 + sway, 486); ctx.stroke()
+        ctx.fillStyle = '#7a6a3a'
+        ctx.beginPath(); ctx.ellipse(rx + lean * 2 + sway, 482, 4, 10, 0, 0, 7); ctx.fill()
+      }
+      ctx.restore()
+    }
+
     _clouds() {
       const { ctx } = this
       ctx.fillStyle = 'rgba(255,255,255,0.75)'
@@ -908,24 +939,46 @@
         ctx.lineCap = 'butt'
       }
       const face = (fy = 0) => {
-        const er = r * 0.14
-        ctx.fillStyle = '#fff'
-        ctx.beginPath(); ctx.arc(-r * 0.32, fy - r * 0.1, er * 1.55, 0, 7); ctx.fill()
-        ctx.beginPath(); ctx.arc(r * 0.32, fy - r * 0.1, er * 1.55, 0, 7); ctx.fill()
-        ctx.fillStyle = '#2c2416'
-        ctx.beginPath(); ctx.arc(-r * 0.3, fy - r * 0.08, er, 0, 7); ctx.fill()
-        ctx.beginPath(); ctx.arc(r * 0.34, fy - r * 0.08, er, 0, 7); ctx.fill()
-        ctx.fillStyle = '#fff'
-        ctx.beginPath(); ctx.arc(-r * 0.34, fy - r * 0.14, er * 0.42, 0, 7); ctx.fill()
-        ctx.beginPath(); ctx.arc(r * 0.3, fy - r * 0.14, er * 0.42, 0, 7); ctx.fill()
-        ctx.fillStyle = 'rgba(255,255,255,0.7)'
-        ctx.beginPath(); ctx.arc(-r * 0.26, fy - r * 0.03, er * 0.2, 0, 7); ctx.fill()
-        ctx.beginPath(); ctx.arc(r * 0.38, fy - r * 0.03, er * 0.2, 0, 7); ctx.fill()
-        ctx.fillStyle = 'rgba(240,120,120,0.4)' // 腮紅
-        ctx.beginPath(); ctx.arc(-r * 0.52, fy + r * 0.18, er * 1.2, 0, 7); ctx.fill()
-        ctx.beginPath(); ctx.arc(r * 0.52, fy + r * 0.18, er * 1.2, 0, 7); ctx.fill()
-        ctx.strokeStyle = '#4a3420'; ctx.lineWidth = Math.max(1.2, r * 0.05) // 微笑
-        ctx.beginPath(); ctx.arc(0, fy + r * 0.12, r * 0.18, 0.25 * Math.PI, 0.75 * Math.PI); ctx.stroke()
+        // ★ 07-24 v3:大眼睛+眨眼(依位置錯開,絕不全場同步;reduced-motion 不眨)+興奮 D 型嘴
+        const er = r * 0.18
+        const blink = !this.reduced && ((this._t + x * 7.13 + y * 3.71) % 4.6) < 0.12
+        if (blink) {
+          ctx.strokeStyle = '#2c2416'; ctx.lineWidth = Math.max(1.6, r * 0.07); ctx.lineCap = 'round'
+          ctx.beginPath(); ctx.moveTo(-r * 0.44, fy - r * 0.08); ctx.lineTo(-r * 0.16, fy - r * 0.08); ctx.stroke()
+          ctx.beginPath(); ctx.moveTo(r * 0.2, fy - r * 0.08); ctx.lineTo(r * 0.48, fy - r * 0.08); ctx.stroke()
+          ctx.lineCap = 'butt'
+        } else {
+          ctx.fillStyle = '#fff'
+          ctx.beginPath(); ctx.arc(-r * 0.32, fy - r * 0.1, er * 1.45, 0, 7); ctx.fill()
+          ctx.beginPath(); ctx.arc(r * 0.32, fy - r * 0.1, er * 1.45, 0, 7); ctx.fill()
+          ctx.fillStyle = '#2c2416'
+          ctx.beginPath(); ctx.arc(-r * 0.3, fy - r * 0.08, er, 0, 7); ctx.fill()
+          ctx.beginPath(); ctx.arc(r * 0.34, fy - r * 0.08, er, 0, 7); ctx.fill()
+          ctx.fillStyle = '#fff'
+          ctx.beginPath(); ctx.arc(-r * 0.35, fy - r * 0.15, er * 0.42, 0, 7); ctx.fill()
+          ctx.beginPath(); ctx.arc(r * 0.29, fy - r * 0.15, er * 0.42, 0, 7); ctx.fill()
+          ctx.fillStyle = 'rgba(255,255,255,0.7)'
+          ctx.beginPath(); ctx.arc(-r * 0.25, fy - r * 0.02, er * 0.2, 0, 7); ctx.fill()
+          ctx.beginPath(); ctx.arc(r * 0.39, fy - r * 0.02, er * 0.2, 0, 7); ctx.fill()
+        }
+        const bl = ctx.createRadialGradient(-r * 0.54, fy + r * 0.22, 0, -r * 0.54, fy + r * 0.22, er * 1.25)
+        bl.addColorStop(0, 'rgba(245,130,130,0.5)'); bl.addColorStop(1, 'rgba(245,130,130,0)')
+        ctx.fillStyle = bl
+        ctx.beginPath(); ctx.arc(-r * 0.54, fy + r * 0.22, er * 1.25, 0, 7); ctx.fill()
+        const br = ctx.createRadialGradient(r * 0.54, fy + r * 0.22, 0, r * 0.54, fy + r * 0.22, er * 1.25)
+        br.addColorStop(0, 'rgba(245,130,130,0.5)'); br.addColorStop(1, 'rgba(245,130,130,0)')
+        ctx.fillStyle = br
+        ctx.beginPath(); ctx.arc(r * 0.54, fy + r * 0.22, er * 1.25, 0, 7); ctx.fill()
+        if (k > 0.05) { // 興奮(收取/落地 Q 彈)=開心 D 型嘴+小舌頭
+          ctx.fillStyle = '#4a3420'
+          ctx.beginPath(); ctx.arc(0, fy + r * 0.14, r * 0.2, 0, Math.PI); ctx.closePath(); ctx.fill()
+          ctx.fillStyle = '#e89090'
+          ctx.beginPath(); ctx.arc(0, fy + r * 0.3, r * 0.11, Math.PI, 0); ctx.fill()
+        } else { // 平時=加深加寬的微笑
+          ctx.strokeStyle = '#4a3420'; ctx.lineWidth = Math.max(1.6, r * 0.065); ctx.lineCap = 'round'
+          ctx.beginPath(); ctx.arc(0, fy + r * 0.08, r * 0.26, 0.18 * Math.PI, 0.82 * Math.PI); ctx.stroke()
+          ctx.lineCap = 'butt'
+        }
       }
       if (kind === 'sheep') { // 小羊:奶白毛球+雲朵頭毛+垂耳
         body('#f6f1e2', '#d8ceb2')
