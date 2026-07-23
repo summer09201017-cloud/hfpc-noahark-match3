@@ -83,6 +83,17 @@ await page.waitForFunction(() => ['close', 'win'].includes(window.__m3.state().s
 await page.waitForFunction(() => window.__m3.state().state === 'win', { timeout: 6000 })
 console.log('✓ 勝利流程 close→win 走通')
 
+// 再玩一次按鈕(勝利卡上)
+await page.waitForTimeout(400) // 等 _drawWinCard 至少畫過一幀(產生 _winBtns)
+await page.evaluate(() => {
+  const g = window.__game
+  const b = g._winBtns[0]
+  const rect = g.cv.getBoundingClientRect()
+  g._down({ clientX: rect.left + ((b.x + b.w / 2) / g.W) * rect.width, clientY: rect.top + ((b.y + b.h / 2) / g.H) * rect.height })
+})
+await page.waitForFunction(() => window.__m3.state().state === 'play' && window.__m3.state().collected === 0, { timeout: 3000 })
+console.log('✓ 再玩一次 → 同難度重新開局')
+
 if (errors.length) { console.error('🔴 頁面錯誤:', errors.slice(0, 5)); process.exit(1) }
 console.log('🟢 全部通過,零 pageerror')
 await browser.close()

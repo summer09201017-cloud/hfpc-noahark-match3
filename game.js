@@ -23,9 +23,9 @@
   const PAIR = 2 // 每 2 隻=一對(一公一母,創 7:9)
 
   const AGES = {
-    young: { label: '🐣 幼', desc: '6×6・上船 15 對', size: 6, kinds: 4, goal: 15, crow: 0 },
-    kid: { label: '🙂 童', desc: '7×7・上船 24 對', size: 7, kinds: 5, goal: 24, crow: 1 },
-    teen: { label: '🔥 青', desc: '8×8・上船 32 對', size: 8, kinds: 6, goal: 32, crow: 2 },
+    young: { label: '🐣 幼', desc: '6×6・上船 20 對', size: 6, kinds: 4, goal: 20, crow: 0 },
+    kid: { label: '🙂 童', desc: '7×7・上船 32 對', size: 7, kinds: 5, goal: 32, crow: 2 },
+    teen: { label: '🔥 青', desc: '8×8・上船 45 對', size: 8, kinds: 6, goal: 45, crow: 3 },
   }
 
   // 六款動物(tsum 圓萌臉;顏色+特徵雙重分辨,紅綠不對抗)
@@ -362,12 +362,12 @@
         const n = this.cfg.size
         for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (this.grid[r][c].kind === 'crow') crows++
         if (this.crowT <= 0) {
-          this.crowT = 12 + Math.random() * 6
+          this.crowT = 10 + Math.random() * 5
           if (crows < this.cfg.crow && this.lock <= 0) {
             const r = Math.floor(Math.random() * n), c = Math.floor(Math.random() * n)
             const cell = this.grid[r][c]
             if (this._isAnimal(cell.kind)) {
-              cell.kind = 'crow'; cell.crowLife = 10; cell.sq = 0.25
+              cell.kind = 'crow'; cell.crowLife = 12; cell.sq = 0.25
               this.toasts.push({ text: T.crowCome, t: this._t })
               this._tone(190, 0.1, 0, 'sawtooth', 0.06); this._tone(160, 0.12, 0.12, 'sawtooth', 0.06)
             }
@@ -454,6 +454,20 @@
       }
       if (this.state === 'intro') {
         for (const b of this._btns) if (x >= b.x && x <= b.x + b.w && y >= b.y && y <= b.y + b.h) return this._start(b.key)
+        return
+      }
+      if (this.state === 'win') {
+        // 勝利卡按鈕用原始畫布座標(卡片不吃 960×540 轉換)
+        const r0 = this.cv.getBoundingClientRect()
+        const rx = ((e.clientX - r0.left) / r0.width) * this.W
+        const ry = ((e.clientY - r0.top) / r0.height) * this.H
+        for (const b of this._winBtns || []) {
+          if (rx >= b.x && rx <= b.x + b.w && ry >= b.y && ry <= b.y + b.h) {
+            if (b.action === 'replay') return this._start(this.age)
+            this.state = 'intro'; this.confetti = []
+            return
+          }
+        }
         return
       }
       if (this.state !== 'play' || this.lock > 0) return
@@ -659,7 +673,7 @@
       ctx.fillStyle = '#7a4a24'
       rR(ctx, ax + 4, houseY - 18, aw - 8, 26, 8); ctx.fill() // 屋頂
       // 窗(=目標對數;亮一格=上船一對)
-      const cols = goal > 24 ? 4 : goal > 16 ? 3 : 2
+      const cols = goal > 36 ? 5 : goal > 24 ? 4 : goal > 16 ? 3 : 2
       const rows = Math.ceil(goal / cols)
       const wx0 = ax + 24, wy0 = houseY + 14
       const ww = (aw - 48 - (cols - 1) * 6) / cols
@@ -907,9 +921,25 @@
       ctx.fillStyle = '#3e3418'
       wrap(ctx, `「${T.winVerse}」(${T.winRef})`, W / 2, H * 0.36, W * 0.68, H * 0.045)
       ctx.fillStyle = '#5a4a90'
-      wrap(ctx, `「${T.teachVerse}」(${T.teachRef})`, W / 2, H * 0.53, W * 0.68, H * 0.043)
+      wrap(ctx, `「${T.teachVerse}」(${T.teachRef})`, W / 2, H * 0.5, W * 0.68, H * 0.041)
       ctx.fillStyle = '#3e3418'
-      wrap(ctx, T.teach, W / 2, H * 0.63, W * 0.68, H * 0.042)
+      wrap(ctx, T.teach, W / 2, H * 0.59, W * 0.68, H * 0.04)
+      // 再玩一次 / 選難度
+      this._winBtns = []
+      const bw = W * 0.22, bh = H * 0.085, by = y + h - bh - H * 0.03
+      const defs = [
+        { label: '🔁 再玩一次', action: 'replay', x: W / 2 - bw - W * 0.02 },
+        { label: '🐣 選難度', action: 'intro', x: W / 2 + W * 0.02 },
+      ]
+      for (const d of defs) {
+        ctx.fillStyle = '#bcd88a'
+        ctx.strokeStyle = '#7a9450'; ctx.lineWidth = 2
+        rR(ctx, d.x, by, bw, bh, 12); ctx.fill(); ctx.stroke()
+        ctx.fillStyle = '#2c3608'
+        ctx.font = `bold ${Math.max(14, H * 0.036)}px "Noto Sans TC","Microsoft JhengHei",sans-serif`
+        ctx.fillText(d.label, d.x + bw / 2, by + bh * 0.64)
+        this._winBtns.push({ x: d.x, y: by, w: bw, h: bh, action: d.action })
+      }
       ctx.restore()
     }
   }
