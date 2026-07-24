@@ -640,7 +640,9 @@
       ctx.save()
       ctx.setTransform(s, 0, 0, s, ox, oy)
       this._bgRainbow()
+      this._sun()
       this._clouds()
+      this._rain()
       this._waterside()
       if (this.state === 'intro') { this._drawIntro(); this._fsBtn(); ctx.restore(); return }
       if (this.state === 'map') { this._drawMap(); this._fsBtn(); ctx.restore(); return }
@@ -814,11 +816,44 @@
       ctx.restore()
     }
 
+    // ☀️ 柔光暈太陽(07-24 使用者點名:白天 candy 全配;十童女夜景除外)
+    _sun() {
+      const { ctx } = this
+      const x = 78, y = 72
+      const halo = ctx.createRadialGradient(x, y, 6, x, y, 84)
+      halo.addColorStop(0, 'rgba(255,238,160,0.5)')
+      halo.addColorStop(0.55, 'rgba(255,232,150,0.16)')
+      halo.addColorStop(1, 'rgba(255,230,140,0)')
+      ctx.fillStyle = halo
+      ctx.beginPath(); ctx.arc(x, y, 84, 0, 7); ctx.fill()
+      const core = ctx.createRadialGradient(x - 5, y - 5, 3, x, y, 26)
+      core.addColorStop(0, '#fffbe8'); core.addColorStop(1, '#ffd75e')
+      ctx.fillStyle = core
+      ctx.beginPath(); ctx.arc(x, y, 26, 0, 7); ctx.fill()
+    }
+
+    // 🌦 太陽雨(07-24):雨絲+常駐彩虹=雨中有虹(創 9:13 立約的天空);reduced-motion 不下
+    _rain() {
+      if (this.reduced) return
+      const { ctx } = this
+      ctx.strokeStyle = 'rgba(150,190,230,0.32)'
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      for (let i = 0; i < 36; i++) {
+        const speed = 300 + (i % 5) * 45
+        const x0 = (i * 167.7) % VW
+        const y = ((i * 91 + this._t * speed) % (VH + 60)) - 30
+        const x = x0 - y * 0.08
+        ctx.moveTo(x, y); ctx.lineTo(x + 1.4, y + 13)
+      }
+      ctx.stroke()
+    }
+
     _clouds() {
       const { ctx } = this
       ctx.fillStyle = 'rgba(255,255,255,0.75)'
-      const drift = (this._t * 6) % (VW + 300) - 150
-      for (const [bx, by, sc] of [[120, 56, 1], [430, 34, 0.8], [700, 66, 1.15]]) {
+      const drift = (this._t * 11) % (VW + 300) - 150 /* 07-24:飄快 ×1.8 */
+      for (const [bx, by, sc] of [[120, 56, 1], [430, 34, 0.8], [700, 66, 1.15], [265, 92, 0.6], [560, 76, 0.9], [850, 48, 0.7]]) {
         const x = ((bx + drift * sc * 0.4) % (VW + 200) + VW + 200) % (VW + 200) - 100
         ctx.beginPath()
         ctx.arc(x, by, 22 * sc, 0, 7); ctx.arc(x + 24 * sc, by - 8 * sc, 17 * sc, 0, 7); ctx.arc(x + 46 * sc, by, 20 * sc, 0, 7)
